@@ -5,6 +5,7 @@ import {
 } from '@backstage/plugin-auth-backend';
 import { Router } from 'express';
 import { PluginEnvironment } from '../types';
+import { DEFAULT_NAMESPACE, stringifyEntityRef } from '@backstage/catalog-model';
 
 export default async function createPlugin(
   env: PluginEnvironment,
@@ -35,10 +36,17 @@ export default async function createPlugin(
       // your own, see the auth documentation for more details:
       //
       //   https://backstage.io/docs/auth/identity-resolver
-      github: providers.github.create({
+      microsoft: providers.microsoft.create({
         signIn: {
-          resolver(_, ctx) {
-            const userRef = 'user:default/guest'; // Must be a full entity reference
+          resolver({profile}, ctx) {
+            if(!profile.email) throw new Error('Credential is not valid');
+            const [ name ] = profile.email.split('@'); 
+
+            const userRef = stringifyEntityRef({
+              kind: 'User',
+              name,
+              namespace: DEFAULT_NAMESPACE,
+            }); // Must be a full entity reference
             return ctx.issueToken({
               claims: {
                 sub: userRef, // The user's own identity
