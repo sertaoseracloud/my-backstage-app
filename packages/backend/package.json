@@ -36,6 +36,7 @@
     "@backstage/plugin-search-backend-module-techdocs": "^0.1.14",
     "@backstage/plugin-search-backend-node": "^1.2.14",
     "@backstage/plugin-techdocs-backend": "^1.9.3",
+    "@parfuemerie-douglas/scaffolder-backend-module-azure-repositories": "^0.2.6",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
     "dockerode": "^3.3.1",

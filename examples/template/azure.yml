@@ -1,0 +1,83 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: azure-repo-demo
+  title: Azure Repository Test
+  description: Clone and push to an Azure repository example.
+spec:
+  owner: parfuemerie-douglas
+  type: service
+
+  parameters:
+    - title: Fill in some steps
+      required:
+        - branch
+        - owner
+      properties:
+        branch:
+          title: Nome da Branch
+          type: string
+          description: Escolha o nome da Branch.
+          ui:field: EntityNamePicker
+          ui:autofocus: true
+        owner:
+          title: Owner
+          type: string
+          description: Escolha quem é o autor do projeto.
+          ui:field: EntityNamePicker
+          ui:autofocus: true
+
+  steps:
+    - id: cloneAzureRepo
+      name: Clone Azure Repo
+      action: azure:repo:clone
+      input:
+        repoUrl: "dev.azure.com?owner=Sertaoseracloud&repo=Sertaoseracloud"
+        remoteUrl: "https://dev.azure.com/engcfraposo/Sertaoseracloud/_git/Sertaoseracloud"
+        branch: "main"
+        targetPath: ./tmp
+
+    - id: fetch
+      name: Template Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ./tmp
+        values:
+          name: ${{ parameters.branch }}
+          owner: ${{ parameters.owner }}
+
+    - id: pushAzureRepo
+      name: Push to Remote Azure Repo
+      action: azure:repo:push
+      input:
+        branch: feature/${{ parameters.branch }}
+        sourcePath: ./tmp
+        gitCommitMessage: Add ${{ parameters.branch }} project files
+    
+    - id: pullRequestAzureRepo
+      name: Create a Pull Request to Azure Repo
+      action: azure:repo:pr
+      input:
+        sourceBranch: feature/${{ parameters.branch }}
+        targetBranch: "main"
+        repoId: Sertaoseracloud
+        title: "feat: ${{ parameters.branch }}"
+        project: Sertaoseracloud
+        supportsIterations: false
+        organization: engcfraposo
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: https://dev.azure.com/engcfraposo/Sertaoseracloud/_git/Sertaoseracloud?version=GBfeature/${{ parameters.branch }}
+        catalogInfoPath: "/catalog-info.yaml"
+
+  output:
+    links:
+      - title: Repository
+        url: https://dev.azure.com/engcfraposo/Sertaoseracloud/_git/Sertaoseracloud?version=GBfeature/${{ parameters.branch }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
